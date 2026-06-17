@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Voice Receptionist — Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3348;
+  --text:#e8eaf0;--muted:#8892a4;--accent:#6c63ff;--accent2:#4ade80;
+  --red:#f87171;--amber:#fbbf24;--blue:#60a5fa;
+  --radius:10px;--font:'Inter',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;font-size:14px}
+a{color:var(--accent);text-decoration:none}
+
+/* ── Layout ── */
+#app{display:flex;min-height:100vh}
+#sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0}
+#main{flex:1;overflow-y:auto}
+
+/* ── Login ── */
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:360px;text-align:center}
+.login-box h1{font-size:22px;font-weight:600;margin-bottom:8px}
+.login-box p{color:var(--muted);margin-bottom:28px;font-size:13px}
+
+/* ── Sidebar ── */
+.logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.logo h2{font-size:15px;font-weight:600;color:var(--text)}
+.logo span{font-size:11px;color:var(--muted)}
+nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--muted);font-size:13px;transition:all .15s;border-left:3px solid transparent}
+nav a:hover{color:var(--text);background:var(--surface2)}
+nav a.active{color:var(--accent);background:rgba(108,99,255,.1);border-left-color:var(--accent)}
+nav a svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border)}
+.biz-selector{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer}
+
+/* ── Page ── */
+.page{display:none;padding:28px 32px;max-width:960px}
+.page.active{display:block}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-header h1{font-size:20px;font-weight:600}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-val{font-size:26px;font-weight:700;margin-bottom:2px}
+.stat-label{font-size:12px;color:var(--muted)}
+
+/* ── Form ── */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+input,textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;font-family:inherit;transition:border .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+textarea{min-height:80px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text)}
+.btn-danger{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.btn-success{background:rgba(74,222,128,.15);color:var(--accent2);border:1px solid rgba(74,222,128,.3)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border)}
+td{padding:11px 12px;border-bottom:1px solid rgba(46,51,72,.5);font-size:13px}
+tr:last-child td{border:none}
+tr:hover td{background:var(--surface2)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-green{background:rgba(74,222,128,.15);color:var(--accent2)}
+.badge-red{background:rgba(248,113,113,.15);color:var(--red)}
+.badge-amber{background:rgba(251,191,36,.15);color:var(--amber)}
+.badge-blue{background:rgba(96,165,250,.15);color:var(--blue)}
+.badge-purple{background:rgba(108,99,255,.15);color:var(--accent)}
+
+/* ── Dynamic list items (services/faqs) ── */
+.list-item{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.list-item input{flex:1}
+.remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;line-height:1;flex-shrink:0}
+.remove-btn:hover{color:var(--red)}
+
+/* ── Webhook info box ── */
+.info-box{background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.25);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--muted);margin-bottom:16px}
+.info-box strong{color:var(--text)}
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:monospace;font-size:12px;color:var(--accent2);word-break:break-all;margin-top:6px;cursor:pointer;position:relative}
+.code-block:hover::after{content:"Click to copy";position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;background:var(--accent);color:#fff;padding:2px 6px;border-radius:4px;font-family:var(--font)}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none}
+#toast.show{opacity:1}
+
+/* ── Trial banner ── */
+.trial-banner{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;font-size:13px}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.3}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <h1>🤖 AI Receptionist</h1>
+    <p>Admin dashboard — enter your password to continue</p>
+    <div class="form-group"><input type="password" id="pw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign in</button>
+    <p id="login-err" style="color:var(--red);font-size:12px;margin-top:10px"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <div id="sidebar">
+    <div class="logo">
+      <h2>AI Receptionist</h2>
+      <span>Admin Dashboard</span>
+    </div>
+    <nav>
+      <a href="#" class="active" data-page="overview" onclick="nav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Overview
+      </a>
+      <a href="#" data-page="appointments" onclick="nav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Appointments
+      </a>
+      <a href="#" data-page="setup" onclick="nav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Business Setup
+      </a>
+      <a href="#" data-page="vapi" onclick="nav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Vapi Setup
+      </a>
+      <a href="#" data-page="billing" onclick="nav(this)">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        Billing
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">Active Business</label>
+      <select class="biz-selector" id="biz-selector" onchange="selectBusiness(this.value)">
+        <option value="">— select —</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="main">
+    <!-- OVERVIEW -->
+    <div class="page active" data-page="overview">
+      <div class="page-header">
+        <h1 id="overview-title">Dashboard</h1>
+        <button class="btn btn-primary btn-sm" onclick="nav(document.querySelector('[data-page=setup]'))">+ New Business</button>
+      </div>
+      <div id="trial-banner"></div>
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="stat-val" id="stat-total">—</div><div class="stat-label">Total appointments</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-today">—</div><div class="stat-label">Today</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-upcoming">—</div><div class="stat-label">Upcoming</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-cancelled">—</div><div class="stat-label">Cancelled</div></div>
+      </div>
+      <div class="card">
+        <h3>Today's appointments</h3>
+        <div class="table-wrap"><table id="today-table">
+          <thead><tr><th>Time</th><th>Customer</th><th>Service</th><th>Phone</th><th>Status</th></tr></thead>
+          <tbody id="today-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="page" data-page="appointments">
+      <div class="page-header">
+        <h1>All Appointments</h1>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="filter-date" style="width:160px" oninput="loadAppointments()"/>
+          <select id="filter-status" style="width:130px" onchange="loadAppointments()">
+            <option value="">All statuses</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Date & Time</th><th>Customer</th><th>Phone</th><th>Service</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="appt-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- BUSINESS SETUP -->
+    <div class="page" data-page="setup">
+      <div class="page-header">
+        <h1>Business Setup</h1>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="new-biz-btn" onclick="resetSetupForm()">+ New Business</button>
+          <button class="btn btn-primary" onclick="saveBusiness()">Save changes</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Basic Info</h3>
+        <input type="hidden" id="f-id"/>
+        <div class="form-row">
+          <div class="form-group"><label>Business name *</label><input id="f-name" placeholder="Glow Beauty Salon"/></div>
+          <div class="form-group"><label>Business type *</label><input id="f-type" placeholder="hair salon, dental clinic, spa…"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Address</label><input id="f-address" placeholder="123 Main St, City"/></div>
+          <div class="form-group"><label>Timezone</label>
+            <select id="f-tz">
+              <option value="America/New_York">America/New_York (EST)</option>
+              <option value="America/Chicago">America/Chicago (CST)</option>
+              <option value="America/Denver">America/Denver (MST)</option>
+              <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+              <option value="Asia/Kolkata" selected>Asia/Kolkata (IST)</option>
+              <option value="Europe/London">Europe/London (GMT)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Hours (text shown to callers)</label><input id="f-hours" placeholder="Mon–Sat 10am–7pm, closed Sundays"/></div>
+          <div class="form-group"><label>AI agent name</label><input id="f-agent" placeholder="Riya"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Open time (24h)</label><input id="f-open" placeholder="10:00"/></div>
+          <div class="form-group"><label>Close time (24h)</label><input id="f-close" placeholder="19:00"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Appointment duration (minutes)</label><input id="f-dur" type="number" placeholder="30"/></div>
+          <div class="form-group"><label>Vapi Phone Number ID<br><span style="font-size:10px;color:var(--muted)">From Vapi dashboard → Phone Numbers → copy the ID</span></label>
+            <input id="f-vapi-id" placeholder="5cc793bb-85ac-…"/>
+          </div>
+        </div>
+        <div class="form-group"><label>Google Calendar ID<br><span style="font-size:10px;color:var(--muted)">Share calendar with your service account email, then paste ID here</span></label>
+          <input id="f-cal" placeholder="xxxxxxx@group.calendar.google.com"/>
+        </div>
+        <div class="form-group"><label>Extra info for the AI (optional)</label>
+          <textarea id="f-extra" placeholder="We are a premium salon. Parking available on site. We speak Hindi and English."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Services & Pricing</h3>
+        <div id="services-list"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addServiceRow()">+ Add service</button>
+      </div>
+
+      <div class="card">
+        <h3>FAQ (Common questions callers ask)</h3>
+        <div id="faqs-list"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addFaqRow()">+ Add FAQ</button>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-danger btn-sm" id="delete-biz-btn" onclick="deleteBusiness()" style="display:none">Delete business</button>
+        <button class="btn btn-primary" onclick="saveBusiness()">Save changes</button>
+      </div>
+    </div>
+
+    <!-- VAPI SETUP -->
+    <div class="page" data-page="vapi">
+      <div class="page-header"><h1>Vapi Configuration Guide</h1></div>
+
+      <div class="info-box">
+        <strong>Your backend webhook URL — paste this into Vapi:</strong>
+        <div class="code-block" id="webhook-url-display" onclick="copyWebhook()">Loading…</div>
+      </div>
+
+      <div class="card">
+        <h3>Step 1 — Fix the silent call issue (5 min)</h3>
+        <ol style="padding-left:18px;line-height:2;font-size:13px;color:var(--muted)">
+          <li>Go to <strong style="color:var(--text)">dashboard.vapi.ai → Phone Numbers</strong></li>
+          <li>Click your number <strong style="color:var(--text)">+1 (424) 699 3691</strong></li>
+          <li>Scroll to <strong style="color:var(--text)">"Server URL"</strong></li>
+          <li>Paste the webhook URL above and click <strong style="color:var(--text)">Save</strong></li>
+          <li><strong style="color:var(--accent2)">Calls will now route to your AI agent automatically</strong></li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Step 2 — Get the Phone Number ID</h3>
+        <ol style="padding-left:18px;line-height:2;font-size:13px;color:var(--muted)">
+          <li>In Vapi → Phone Numbers, click your number</li>
+          <li>Copy the ID shown below the number (format: <code style="color:var(--accent)">5cc793bb-85ac-4baa-…</code>)</li>
+          <li>Go to <strong style="color:var(--text)">Business Setup</strong> tab, paste it into <strong style="color:var(--text)">Vapi Phone Number ID</strong></li>
+          <li>Save — the backend will now match inbound calls to the right business</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Step 3 — Add credits to Vapi</h3>
+        <p style="color:var(--muted);font-size:13px;line-height:1.8">
+          You currently have <strong style="color:var(--amber)">10 credits (~3 min of calls)</strong>. Add at least $10 for testing.
+          <br>Vapi dashboard → Billing → Add credits. Claude Haiku costs ~$0.02/min, ElevenLabs TTS ~$0.01/min, Deepgram STT ~$0.01/min.
+          <br><strong style="color:var(--text)">~$0.04–0.06 per minute total</strong>. $10 = ~170 minutes for testing.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Step 4 — Test a call right now</h3>
+        <ol style="padding-left:18px;line-height:2;font-size:13px;color:var(--muted)">
+          <li>Make sure Business Setup is saved with your services and hours</li>
+          <li>Call <strong style="color:var(--text)">+1 (424) 699 3691</strong> from any phone</li>
+          <li>The AI will answer, answer pricing questions, and book into your calendar</li>
+          <li>Booked appointments appear in the <strong style="color:var(--text)">Appointments</strong> tab immediately</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Step 5 — Google Calendar (for real bookings)</h3>
+        <ol style="padding-left:18px;line-height:2;font-size:13px;color:var(--muted)">
+          <li>Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> → create or select a project</li>
+          <li>Enable <strong style="color:var(--text)">Google Calendar API</strong></li>
+          <li>Create a <strong style="color:var(--text)">Service Account</strong> → download the JSON key</li>
+          <li>Copy <code style="color:var(--accent)">client_email</code> and <code style="color:var(--accent)">private_key</code> into your <code style="color:var(--accent)">.env</code> file</li>
+          <li>Open Google Calendar → create a new calendar for this business</li>
+          <li>Share it with the service account email (Make changes to events permission)</li>
+          <li>Copy the Calendar ID → paste into Business Setup → save</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- BILLING -->
+    <div class="page" data-page="billing">
+      <div class="page-header"><h1>Billing & Subscription</h1></div>
+      <div id="billing-content">
+        <div class="card" id="trial-card">
+          <h3>Free Trial</h3>
+          <div id="trial-info" style="font-size:13px;color:var(--muted);line-height:2"></div>
+        </div>
+        <div class="card">
+          <h3>Pro Plan — $199/month</h3>
+          <ul style="padding-left:18px;line-height:2.2;font-size:13px;color:var(--muted)">
+            <li>✅ AI picks every call 24/7</li>
+            <li>✅ Unlimited appointment booking & cancellation</li>
+            <li>✅ Appointment dashboard with full history</li>
+            <li>✅ SMS reminders sent 24h before each appointment</li>
+            <li>✅ Never miss a customer call again</li>
+            <li>✅ Set your own services, pricing, and hours</li>
+          </ul>
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" onclick="alert('Stripe integration coming soon — contact us to activate your subscription.')">Upgrade to Pro — $199/month</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '';
+let token = '';
+let activeBizId = '';
+let businesses = [];
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('pw').value;
+  const r = await fetch('/api/auth', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) });
+  if (r.ok) {
+    token = pw;
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    init();
+  } else {
+    document.getElementById('login-err').textContent = 'Wrong password';
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function init() {
+  await loadBusinesses();
+  loadWebhookUrl();
+  if (businesses.length) selectBusiness(businesses[0].id);
+}
+
+async function loadBusinesses() {
+  const r = await apiFetch('/api/businesses');
+  businesses = r;
+  const sel = document.getElementById('biz-selector');
+  sel.innerHTML = '<option value="">— select —</option>' + businesses.map(b =>
+    `<option value="${b.id}">${b.name}</option>`
+  ).join('');
+  if (activeBizId) sel.value = activeBizId;
+}
+
+async function selectBusiness(id) {
+  activeBizId = id;
+  document.getElementById('biz-selector').value = id;
+  if (id) {
+    await loadOverview();
+    await loadTrialBanner();
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function nav(el) {
+  event.preventDefault();
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  const page = el.dataset.page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.page[data-page="${page}"]`).classList.add('active');
+  if (page === 'appointments') loadAppointments();
+  if (page === 'setup') loadSetupForm();
+  if (page === 'overview') loadOverview();
+  if (page === 'billing') loadBilling();
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────
+async function loadOverview() {
+  if (!activeBizId) return;
+  const biz = businesses.find(b => b.id === activeBizId);
+  if (biz) document.getElementById('overview-title').textContent = biz.name;
+
+  const appts = await apiFetch(`/api/businesses/${activeBizId}/appointments`);
+  const today = new Date().toISOString().slice(0,10);
+  const todayAppts = appts.filter(a => a.startTime?.startsWith(today));
+  const upcoming = appts.filter(a => a.startTime > new Date().toISOString() && a.status === 'confirmed');
+  const cancelled = appts.filter(a => a.status === 'cancelled');
+
+  document.getElementById('stat-total').textContent = appts.length;
+  document.getElementById('stat-today').textContent = todayAppts.length;
+  document.getElementById('stat-upcoming').textContent = upcoming.length;
+  document.getElementById('stat-cancelled').textContent = cancelled.length;
+
+  const tbody = document.getElementById('today-tbody');
+  if (!todayAppts.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">No appointments today</td></tr>';
+    return;
+  }
+  tbody.innerHTML = todayAppts.map(a => `
+    <tr>
+      <td>${fmtTime(a.startTime)}</td>
+      <td>${esc(a.customerName)}</td>
+      <td>${esc(a.service)}</td>
+      <td>${esc(a.customerPhone)}</td>
+      <td>${badge(a.status)}</td>
+    </tr>
+  `).join('');
+}
+
+async function loadTrialBanner() {
+  if (!activeBizId) return;
+  const sub = await apiFetch(`/api/businesses/${activeBizId}/subscription`);
+  const el = document.getElementById('trial-banner');
+  if (sub.status === 'trial') {
+    el.innerHTML = `<div class="trial-banner">
+      <span>🎉 Free trial — <strong>${sub.trialDaysLeft} days remaining</strong>. Upgrade to Pro to continue after the trial ends.</span>
+      <button class="btn btn-primary btn-sm" onclick="nav(document.querySelector('[data-page=billing]'))">Upgrade — $199/mo</button>
+    </div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// ── Appointments ──────────────────────────────────────────────────────────
+async function loadAppointments() {
+  if (!activeBizId) { showEmptyState('appt-tbody', 5, 'Select a business first'); return; }
+  const date = document.getElementById('filter-date').value;
+  const status = document.getElementById('filter-status').value;
+  const params = new URLSearchParams();
+  if (date) params.set('date', date);
+  if (status) params.set('status', status);
+  const appts = await apiFetch(`/api/businesses/${activeBizId}/appointments?${params}`);
+  const tbody = document.getElementById('appt-tbody');
+  if (!appts.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No appointments found</td></tr>'; return; }
+  tbody.innerHTML = appts.map(a => `
+    <tr>
+      <td>${fmtDateTime(a.startTime)}</td>
+      <td>${esc(a.customerName)}</td>
+      <td>${esc(a.customerPhone)}</td>
+      <td>${esc(a.service)}</td>
+      <td>${badge(a.status)}</td>
+      <td>
+        ${a.status === 'confirmed' ? `<button class="btn btn-danger btn-sm" onclick="cancelAppt('${a.id}')">Cancel</button>` : ''}
+        ${a.status === 'confirmed' ? `<button class="btn btn-success btn-sm" style="margin-left:4px" onclick="completeAppt('${a.id}')">Done</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function cancelAppt(id) {
+  if (!confirm('Cancel this appointment?')) return;
+  await apiFetch(`/api/businesses/${activeBizId}/appointments/${id}`, 'PATCH', { status: 'cancelled' });
+  toast('Appointment cancelled');
+  loadAppointments();
+  loadOverview();
+}
+
+async function completeAppt(id) {
+  await apiFetch(`/api/businesses/${activeBizId}/appointments/${id}`, 'PATCH', { status: 'completed' });
+  toast('Marked as completed');
+  loadAppointments();
+}
+
+// ── Business Setup ────────────────────────────────────────────────────────
+function loadSetupForm() {
+  const biz = businesses.find(b => b.id === activeBizId);
+  resetSetupForm();
+  if (!biz) return;
+  document.getElementById('f-id').value = biz.id;
+  document.getElementById('f-name').value = biz.name || '';
+  document.getElementById('f-type').value = biz.businessType || '';
+  document.getElementById('f-address').value = biz.address || '';
+  document.getElementById('f-tz').value = biz.timezone || 'Asia/Kolkata';
+  document.getElementById('f-hours').value = biz.hoursText || '';
+  document.getElementById('f-agent').value = biz.agentName || '';
+  document.getElementById('f-open').value = biz.openHours?.start || '';
+  document.getElementById('f-close').value = biz.openHours?.end || '';
+  document.getElementById('f-dur').value = biz.appointmentDurationMinutes || 30;
+  document.getElementById('f-vapi-id').value = biz.vapiPhoneNumberId || '';
+  document.getElementById('f-cal').value = biz.calendarId || '';
+  document.getElementById('f-extra').value = biz.extraInfo || '';
+  document.getElementById('delete-biz-btn').style.display = 'inline-flex';
+
+  // Services
+  (biz.services || []).forEach(s => addServiceRow(s.name, s.price));
+  // FAQs
+  (biz.faqs || []).forEach(f => addFaqRow(f.q, f.a));
+}
+
+function resetSetupForm() {
+  ['f-id','f-name','f-type','f-address','f-hours','f-agent','f-open','f-close','f-vapi-id','f-cal','f-extra'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-dur').value = 30;
+  document.getElementById('f-tz').value = 'Asia/Kolkata';
+  document.getElementById('services-list').innerHTML = '';
+  document.getElementById('faqs-list').innerHTML = '';
+  document.getElementById('delete-biz-btn').style.display = 'none';
+  addServiceRow(); addServiceRow(); addFaqRow();
+}
+
+function addServiceRow(name='', price='') {
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `<input placeholder="Service name (e.g. Haircut)" value="${esc(name)}"/><input placeholder="Price (e.g. $40)" value="${esc(price)}" style="max-width:160px"/><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('services-list').appendChild(div);
+}
+
+function addFaqRow(q='', a='') {
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.style.alignItems = 'flex-start';
+  div.innerHTML = `<input placeholder="Question (e.g. Do you take walk-ins?)" value="${esc(q)}"/><input placeholder="Answer" value="${esc(a)}"/><button class="remove-btn" onclick="this.parentElement.remove()" style="margin-top:10px">×</button>`;
+  document.getElementById('faqs-list').appendChild(div);
+}
+
+async function saveBusiness() {
+  const services = [...document.querySelectorAll('#services-list .list-item')].map(row => {
+    const inputs = row.querySelectorAll('input');
+    return { name: inputs[0].value.trim(), price: inputs[1].value.trim() };
+  }).filter(s => s.name);
+
+  const faqs = [...document.querySelectorAll('#faqs-list .list-item')].map(row => {
+    const inputs = row.querySelectorAll('input');
+    return { q: inputs[0].value.trim(), a: inputs[1].value.trim() };
+  }).filter(f => f.q);
+
+  const payload = {
+    name: document.getElementById('f-name').value.trim(),
+    businessType: document.getElementById('f-type').value.trim(),
+    address: document.getElementById('f-address').value.trim(),
+    timezone: document.getElementById('f-tz').value,
+    hoursText: document.getElementById('f-hours').value.trim(),
+    agentName: document.getElementById('f-agent').value.trim(),
+    openHours: {
+      start: document.getElementById('f-open').value.trim(),
+      end: document.getElementById('f-close').value.trim(),
+      daysOpen: [0,1,2,3,4,5,6],
+    },
+    appointmentDurationMinutes: parseInt(document.getElementById('f-dur').value) || 30,
+    vapiPhoneNumberId: document.getElementById('f-vapi-id').value.trim(),
+    calendarId: document.getElementById('f-cal').value.trim(),
+    extraInfo: document.getElementById('f-extra').value.trim(),
+    services, faqs,
+  };
+
+  if (!payload.name) { toast('Business name is required'); return; }
+
+  const id = document.getElementById('f-id').value;
+  if (id) {
+    await apiFetch(`/api/businesses/${id}`, 'PUT', payload);
+    toast('Business updated ✓');
+  } else {
+    const biz = await apiFetch('/api/businesses', 'POST', payload);
+    document.getElementById('f-id').value = biz.id;
+    activeBizId = biz.id;
+    document.getElementById('delete-biz-btn').style.display = 'inline-flex';
+    toast('Business created ✓');
+  }
+  await loadBusinesses();
+  selectBusiness(activeBizId);
+}
+
+async function deleteBusiness() {
+  const id = document.getElementById('f-id').value;
+  if (!id) return;
+  if (!confirm('Delete this business and all its data?')) return;
+  await apiFetch(`/api/businesses/${id}`, 'DELETE');
+  activeBizId = '';
+  resetSetupForm();
+  await loadBusinesses();
+  toast('Business deleted');
+}
+
+// ── Billing ────────────────────────────────────────────────────────────────
+async function loadBilling() {
+  if (!activeBizId) return;
+  const sub = await apiFetch(`/api/businesses/${activeBizId}/subscription`);
+  const el = document.getElementById('trial-info');
+  if (sub.status === 'trial') {
+    el.innerHTML = `
+      You are on a <strong>15-day free trial</strong>.<br>
+      Days remaining: <strong style="color:var(--amber)">${sub.trialDaysLeft} days</strong><br>
+      After the trial, upgrade to Pro ($199/month) to keep receiving calls.
+    `;
+  } else if (sub.status === 'active') {
+    el.innerHTML = `<strong style="color:var(--accent2)">✓ Pro plan active</strong> — $199/month`;
+  } else {
+    el.innerHTML = `<strong style="color:var(--red)">Trial expired</strong> — please upgrade to continue.`;
+  }
+}
+
+// ── Webhook URL ────────────────────────────────────────────────────────────
+async function loadWebhookUrl() {
+  const r = await apiFetch('/api/webhook-url');
+  document.getElementById('webhook-url-display').textContent = r.url;
+}
+
+function copyWebhook() {
+  const url = document.getElementById('webhook-url-display').textContent;
+  navigator.clipboard.writeText(url).then(() => toast('Copied to clipboard!'));
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+async function apiFetch(path, method='GET', body=null) {
+  const opts = { method, headers: { 'x-admin-token': token, 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  if (!r.ok) { const e = await r.json().catch(()=>({error:'Error'})); throw new Error(e.error); }
+  return r.json();
+}
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function badge(status) {
+  const map = { confirmed:'badge-green', cancelled:'badge-red', completed:'badge-blue', trial:'badge-amber' };
+  return `<span class="badge ${map[status]||'badge-blue'}">${status}</span>`;
+}
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function showEmptyState(tbodyId, cols, msg) {
+  document.getElementById(tbodyId).innerHTML = `<tr><td colspan="${cols}" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

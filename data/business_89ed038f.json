@@ -1,0 +1,37 @@
+{
+  "id": "89ed038f",
+  "createdAt": "2026-06-17T08:13:30.625Z",
+  "trialStartedAt": "2026-06-17T08:13:30.626Z",
+  "subscriptionStatus": "trial",
+  "name": "vikas",
+  "businessType": "hair saloon",
+  "address": "123 ,main street",
+  "timezone": "Asia/Kolkata",
+  "hoursText": "mon-sat",
+  "agentName": "riya",
+  "openHours": {
+    "start": "10:00",
+    "end": "19:00",
+    "daysOpen": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  "appointmentDurationMinutes": 30,
+  "vapiPhoneNumberId": "5cc793bb-85ac-4baa-a6e2-f609e6a83317",
+  "calendarId": "",
+  "extraInfo": "",
+  "services": [
+    {
+      "name": "haircut",
+      "price": "200"
+    }
+  ],
+  "faqs": [],
+  "appointments": []
+}
